@@ -1,0 +1,6 @@
+# arxiv-ob configuration
+# Copy this file to your vault root as config.yaml
+
+# Language for AI-generated content (default: en)
+# Can be overridden per-paper in the note's frontmatter
+output-language: en
