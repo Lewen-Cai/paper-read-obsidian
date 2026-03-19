@@ -21,50 +21,103 @@ This project provides [Claude Code](https://docs.anthropic.com/en/docs/claude-co
 
 Between commands, just talk to Claude naturally — ask questions about the paper, request explanations of equations, discuss concepts. Claude always sees your currently open note through Claudian.
 
-## Prerequisites
-
-- [Zotero 7](https://www.zotero.org/) — running locally with "Allow other applications to communicate with Zotero" enabled (Settings → Advanced)
-- [Obsidian](https://obsidian.md/)
-- [Claudian](https://github.com/YishenTu/claudian) — Claude Code plugin for Obsidian
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code)
-- [Python 3.10+](https://www.python.org/) with pip
+---
 
 ## Installation
 
-### Quick Install (via Claudian)
+Follow these steps in order. Each step must be completed before moving to the next.
 
-Open Claudian in your Obsidian vault and say:
+### Step 1: Install Prerequisites
 
-> "Install paper-read-obsidian from https://github.com/Lewen-Cai/paper-read-obsidian"
+You need these installed on your machine before proceeding:
 
-Claude will clone the repo, install the Zotero MCP server, set up skills, and create the vault folder structure automatically.
+**1a. Python 3.10+**
 
-### Manual Installation
+Check if you have it:
+```bash
+python --version
+```
+If not installed, download from [python.org](https://www.python.org/downloads/). Make sure to check "Add Python to PATH" during installation on Windows.
 
-1. **Install the Zotero MCP server:**
+**1b. Claude Code CLI**
+
+Install via npm:
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+Verify it works:
+```bash
+claude --version
+```
+See [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for detailed installation instructions.
+
+**1c. Zotero 7**
+
+Download and install from [zotero.org](https://www.zotero.org/download/). Make sure you have some papers in your library.
+
+**1d. Obsidian**
+
+Download and install from [obsidian.md](https://obsidian.md/). Create or open the vault you want to use for paper reading.
+
+### Step 2: Configure Zotero
+
+Open Zotero and enable the local API so other applications can access your library:
+
+1. Open Zotero
+2. Go to **Edit → Settings** (Windows/Linux) or **Zotero → Settings** (macOS)
+3. Click the **Advanced** tab
+4. Check **"Allow other applications on this computer to communicate with Zotero"**
+5. Keep Zotero running (it must be open whenever you use the paper reading commands)
+
+### Step 3: Install the Zotero MCP Server
+
+This is the bridge that lets Claude access your Zotero library.
 
 ```bash
 pip install zotero-mcp-server
 ```
 
-2. **Clone this repo** (anywhere on your machine):
-
+Verify it installed correctly:
 ```bash
-git clone https://github.com/Lewen-Cai/paper-read-obsidian.git
+zotero-mcp --help
 ```
 
-3. **Symlink skills** into your vault's `.claude/skills/`:
+You should see the help output with available commands. If you get "command not found", make sure Python's Scripts directory is in your PATH.
 
-```bash
-# From your Obsidian vault directory
-mkdir -p .claude/skills
-ln -s /path/to/paper-read-obsidian/skills/read-papers .claude/skills/read-papers
-ln -s /path/to/paper-read-obsidian/skills/review-papers .claude/skills/review-papers
-ln -s /path/to/paper-read-obsidian/skills/library-papers .claude/skills/library-papers
-ln -s /path/to/paper-read-obsidian/skills/log-papers .claude/skills/log-papers
-```
+### Step 4: Install Claudian in Obsidian
 
-4. **Configure the MCP server** in your vault's `.claude/settings.json`:
+Claudian is the plugin that runs Claude Code inside Obsidian. It is **not in the Obsidian community plugin store yet**, so you need to install it manually.
+
+**Option A: Using BRAT (recommended — handles auto-updates)**
+
+1. In Obsidian, go to **Settings → Community plugins → Browse**
+2. Search for **"BRAT"** and install it
+3. Enable BRAT in Settings → Community plugins
+4. Open the command palette (Ctrl/Cmd + P), type **"BRAT: Add a beta plugin"**
+5. Enter the URL: `https://github.com/YishenTu/claudian`
+6. Click **Add Plugin**
+7. Go to **Settings → Community plugins** and enable **Claudian**
+
+**Option B: Manual install from GitHub release**
+
+1. Go to [Claudian releases](https://github.com/YishenTu/claudian/releases)
+2. Download `main.js`, `manifest.json`, and `styles.css` from the latest release
+3. In your vault, create the folder: `.obsidian/plugins/claudian/`
+4. Copy the 3 downloaded files into that folder
+5. In Obsidian, go to **Settings → Community plugins** and enable **Claudian**
+
+**After enabling Claudian:**
+
+1. Go to **Settings → Claudian**
+2. Make sure the Claude CLI path is detected (if not, set it manually under Advanced → Claude CLI path)
+3. Test it works: open the Claudian chat panel and type "hello"
+
+### Step 5: Install the Zotero MCP Server in Claudian
+
+Tell Claudian where to find the Zotero MCP server so Claude can access your library.
+
+1. In your vault, create the folder `.claude/` if it doesn't exist
+2. Create the file `.claude/settings.json` with this content:
 
 ```json
 {
@@ -79,19 +132,102 @@ ln -s /path/to/paper-read-obsidian/skills/log-papers .claude/skills/log-papers
 }
 ```
 
-5. **Enable Zotero's local API:** In Zotero → Settings → Advanced, check "Allow other applications to communicate with Zotero."
+**On Windows**, the `zotero-mcp` command may not be found by Claudian. If that happens, use the full path to the executable instead:
 
-6. **Create vault folders:**
+```json
+{
+  "mcpServers": {
+    "zotero": {
+      "command": "C:/Users/<your-username>/AppData/Local/Programs/Python/Python3xx/Scripts/zotero-mcp.exe",
+      "env": {
+        "ZOTERO_LOCAL": "true"
+      }
+    }
+  }
+}
+```
+
+To find the exact path, run:
+```bash
+where zotero-mcp
+```
+
+**Alternatively**, you can configure this through Claudian's UI:
+1. Go to **Settings → Claudian → MCP Servers**
+2. Add a new MCP server with the configuration above
+
+### Step 6: Clone This Repo and Install Skills
 
 ```bash
+git clone https://github.com/Lewen-Cai/paper-read-obsidian.git
+```
+
+Now symlink the skills into your vault's `.claude/skills/` directory:
+
+**macOS / Linux:**
+```bash
+cd /path/to/your/vault
+mkdir -p .claude/skills
+ln -s /path/to/paper-read-obsidian/skills/read-papers .claude/skills/read-papers
+ln -s /path/to/paper-read-obsidian/skills/review-papers .claude/skills/review-papers
+ln -s /path/to/paper-read-obsidian/skills/library-papers .claude/skills/library-papers
+ln -s /path/to/paper-read-obsidian/skills/log-papers .claude/skills/log-papers
+```
+
+**Windows (run Command Prompt as Administrator):**
+```cmd
+cd C:\path\to\your\vault
+mkdir .claude\skills
+mklink /D .claude\skills\read-papers C:\path\to\paper-read-obsidian\skills\read-papers
+mklink /D .claude\skills\review-papers C:\path\to\paper-read-obsidian\skills\review-papers
+mklink /D .claude\skills\library-papers C:\path\to\paper-read-obsidian\skills\library-papers
+mklink /D .claude\skills\log-papers C:\path\to\paper-read-obsidian\skills\log-papers
+```
+
+**Windows alternative (copy instead of symlink — no admin needed, but won't auto-update):**
+```bash
+xcopy /E /I C:\path\to\paper-read-obsidian\skills\read-papers .claude\skills\read-papers
+xcopy /E /I C:\path\to\paper-read-obsidian\skills\review-papers .claude\skills\review-papers
+xcopy /E /I C:\path\to\paper-read-obsidian\skills\library-papers .claude\skills\library-papers
+xcopy /E /I C:\path\to\paper-read-obsidian\skills\log-papers .claude\skills\log-papers
+```
+
+### Step 7: Create Vault Folders
+
+Create the folder structure for your papers:
+
+```bash
+cd /path/to/your/vault
 mkdir -p Papers Topics "Reading Plans"
 ```
 
-7. **Copy the config template** (optional):
+Or create them manually in Obsidian: right-click in the file explorer and create new folders named `Papers`, `Topics`, and `Reading Plans`.
+
+### Step 8: Copy Config (Optional)
+
+Copy the default config file to your vault root:
 
 ```bash
-cp /path/to/paper-read-obsidian/templates/config.yaml .
+cp /path/to/paper-read-obsidian/templates/config.yaml /path/to/your/vault/config.yaml
 ```
+
+This sets the default language for AI-generated content to English. Edit it to change the language.
+
+### Step 9: Verify Everything Works
+
+1. Make sure **Zotero is running** with some papers in your library
+2. Open **Obsidian** with your vault
+3. Open the **Claudian** chat panel
+4. Type: `/library-papers recent`
+5. You should see a list of your recently added Zotero papers
+
+If you get an error about connecting to Zotero, check:
+- Zotero is running
+- "Allow other applications to communicate with Zotero" is enabled (Step 2)
+- The MCP server is configured correctly in `.claude/settings.json` (Step 5)
+- `zotero-mcp` is in your PATH (run `zotero-mcp --help` in terminal)
+
+---
 
 ## Vault Structure
 
@@ -111,12 +247,19 @@ Your-Vault/
 │   ├── attention-mechanisms.md
 │   └── transformer-architecture.md
 ├── Reading Plans/              # Optional reading sequences
-└── config.yaml                 # Preferences (output language, etc.)
+├── config.yaml                 # Preferences (output language, etc.)
+└── .claude/
+    ├── settings.json           # MCP server config (Step 5)
+    └── skills/                 # Symlinked skills (Step 6)
+        ├── read-papers/
+        ├── review-papers/
+        ├── library-papers/
+        └── log-papers/
 ```
 
 ## Configuration
 
-Create `config.yaml` in your vault root to customize defaults:
+The `config.yaml` file in your vault root controls defaults:
 
 ```yaml
 # Language for AI-generated content (default: en)
@@ -171,6 +314,28 @@ Two templates are available when starting a new paper:
 - **Simple** — One-paragraph overview and key takeaways. Best for lighter reads or quick understanding.
 
 Templates are in `templates/` for reference. You can customize them by editing the files in `skills/read-papers/`.
+
+## Troubleshooting
+
+### "Could not connect to Zotero"
+- Make sure Zotero is running
+- Check that "Allow other applications to communicate with Zotero" is enabled in Zotero Settings → Advanced
+- Verify `zotero-mcp --help` works in your terminal
+
+### Skills not showing up as slash commands
+- Verify the skill files exist in `.claude/skills/` inside your vault
+- Each skill folder should contain a `SKILL.md` file
+- Restart Claudian after adding skills
+
+### "zotero-mcp: command not found"
+- Make sure `pip install zotero-mcp-server` completed successfully
+- On Windows, check that Python's Scripts directory is in your PATH
+- Try using the full path to `zotero-mcp` in your `.claude/settings.json`
+
+### MCP server not connecting
+- Check `.claude/settings.json` exists in your vault root and has the correct JSON
+- On Windows, you may need the full path to `zotero-mcp.exe` instead of just `zotero-mcp`
+- Restart Claudian/Obsidian after changing MCP configuration
 
 ## License
 
