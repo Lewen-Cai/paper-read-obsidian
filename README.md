@@ -40,7 +40,7 @@ pip install zotero-mcp-server
 2. **Clone this repo** (anywhere on your machine):
 
 ```bash
-git clone https://github.com/<your-username>/arxiv-ob.git
+git clone https://github.com/Lewen-Cai/paper-read-obsidian.git
 ```
 
 3. **Symlink skills** into your vault's `.claude/skills/`:
