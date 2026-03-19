@@ -1,4 +1,4 @@
-# arxiv-ob
+# paper-read-obsidian
 
 AI-assisted paper reading for Obsidian. Connect your Zotero library to Claude Code and get structured reading notes, interactive Q&A, and post-reading synthesis — all from within Obsidian.
 
